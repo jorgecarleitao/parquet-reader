@@ -1,6 +1,6 @@
 # parquet-reader
 
-Goal: write a client-side, browser-based reader of parquet files leveraging WASM and recent developments
+Goal: write a client-side, browser-based reader of [parquet](https://parquet.apache.org/) files leveraging [web assembly](https://webassembly.org/) and recent developments
 in [arrow2](https://github.com/jorgecarleitao/arrow2) and [parquet2](https://github.com/jorgecarleitao/parquet2).
 
 How:
@@ -12,4 +12,11 @@ How:
 Down the road:
 * expose method to read the file from s3 using some authentication model
 * expose method to read the file from azure using some authentication model
-* offer UI to explore the _data_ on the file (e.g. using WASM and `arrow2`)
+* offer UI to explore the _data_ on the file (e.g. using web assembly and `arrow2`)
+
+Probable tech stack:
+* Rust for parquet reading
+* web-pack `.wasm -> js-equivalent`
+* react to UI and usual frontend stuff
+* material UI for visualization
+* AWS cloudfront for deployment
