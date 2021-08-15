@@ -3,9 +3,10 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
-  import('wasm').then(({ add_two_ints }) => {
-    const sumResult = add_two_ints(10, 20);
-    console.log("Sum", sumResult);
+  import('wasm').then(({ read_parquet }) => {
+    const file_content = new Uint8Array([0, 1, 0]);
+    const file_version = read_parquet(file_content);
+    console.log("parquet file version", file_version);
   })
   return (
     <div className="App">

@@ -20,3 +20,14 @@ Probable tech stack:
 * react to UI and usual frontend stuff
 * material UI for visualization
 * AWS cloudfront for deployment
+
+## How to build
+
+```
+cd parquet-reader
+wasm-pack build --out-dir ../wasm-build
+cd ..
+npm start
+```
+
+open the terminal on the browser and observe an error.
