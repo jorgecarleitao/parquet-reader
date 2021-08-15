@@ -31,4 +31,5 @@ cd client
 npm start
 ```
 
-open the terminal on the browser and observe an error.
+select a parquet file from your computer (e.g. download [this one](https://dev-jorgecardleitao.s3.eu-central-1.amazonaws.com/basic_nullable_10.parquet)) and see the file's metadata in the console 
+as a JS map.

@@ -1,31 +1,53 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
 
-function App() {
-  import('wasm').then(({ read_parquet }) => {
-    const file_content = new Uint8Array([0, 1, 0]);
-    const file_version = read_parquet(file_content);
-    console.log("parquet file version", file_version);
-  })
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function replacer(key: any, value: any) {
+  if (value instanceof Map) {
+    return Object.fromEntries(value)
+  } else {
+    return value;
+  }
+}
+
+class App extends React.Component<{}, { metadata: any }> {
+  constructor(props: any) {
+    super(props)
+    this.uploadFile = this.uploadFile.bind(this);
+    this.state = { metadata: null };
+  }
+
+  uploadFile(event: any) {
+    let file = event.target.files[0];
+
+    if (file) {
+      let self = this;
+      import('wasm').then(({ read_parquet }) => {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          const file_content = new Uint8Array(reader.result as ArrayBuffer);
+          const metadata = read_parquet(file_content);
+          self.setState({ metadata: metadata });
+        }
+        reader.readAsArrayBuffer(file);
+      })
+    }
+  }
+
+  render() {
+    console.log("state:", this.state.metadata);
+    return (
+      <div className="App">
+        <header className="App-header">
+          <p>
+            Select a parquet file to read its contents
+          </p>
+          <input type="file"
+            name="myFile"
+            onChange={this.uploadFile} />
+        </header>
+        <pre>{JSON.stringify(this.state.metadata, replacer, 2)}</pre>
+      </div>
+    );
+  }
 }
 
 export default App;
