@@ -27,6 +27,7 @@ Probable tech stack:
 cd parquet-reader
 wasm-pack build --out-dir ../wasm-build
 cd ..
+cd client
 npm start
 ```
 
