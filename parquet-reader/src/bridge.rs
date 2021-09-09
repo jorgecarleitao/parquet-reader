@@ -2,12 +2,13 @@ use parquet2::{
     compression::Compression as CompressionDef,
     metadata::{
         ColumnChunkMetaData as ColumnChunkMetaDataDef, FileMetaData as FileMetaDataDef,
-        RowGroupMetaData as RowGroupMetaDataDef, SchemaDescriptor,
+        RowGroupMetaData as RowGroupMetaDataDef, SchemaDescriptor as SchemaDescriptorDef,
     },
     schema::{
         types::{
             BasicTypeInfo as BasicTypeInfoDef, LogicalType as LogicalTypeDef,
-            ParquetType as ParquetTypeDef, PhysicalType, TimeUnit,
+            ParquetType as ParquetTypeDef, PhysicalType as PhysicalTypeDef,
+            TimeUnit as TimeUnitDef,
         },
         Repetition as RepetitionDef,
     },
@@ -47,7 +48,7 @@ impl From<BasicTypeInfoDef> for BasicTypeInfo {
 }
 
 #[derive(Debug, Serialize)]
-pub enum PhysicalTypeDef {
+pub enum PhysicalType {
     Boolean,
     Int32,
     Int64,
@@ -58,34 +59,34 @@ pub enum PhysicalTypeDef {
     FixedLenByteArray(i32),
 }
 
-impl From<PhysicalType> for PhysicalTypeDef {
-    fn from(item: PhysicalType) -> Self {
+impl From<PhysicalTypeDef> for PhysicalType {
+    fn from(item: PhysicalTypeDef) -> Self {
         match item {
-            PhysicalType::Boolean => PhysicalTypeDef::Boolean,
-            PhysicalType::Int32 => PhysicalTypeDef::Int32,
-            PhysicalType::Int64 => PhysicalTypeDef::Int64,
-            PhysicalType::Int96 => PhysicalTypeDef::Int96,
-            PhysicalType::Float => PhysicalTypeDef::Float,
-            PhysicalType::Double => PhysicalTypeDef::Double,
-            PhysicalType::ByteArray => PhysicalTypeDef::ByteArray,
-            PhysicalType::FixedLenByteArray(a) => PhysicalTypeDef::FixedLenByteArray(a),
+            PhysicalTypeDef::Boolean => PhysicalType::Boolean,
+            PhysicalTypeDef::Int32 => PhysicalType::Int32,
+            PhysicalTypeDef::Int64 => PhysicalType::Int64,
+            PhysicalTypeDef::Int96 => PhysicalType::Int96,
+            PhysicalTypeDef::Float => PhysicalType::Float,
+            PhysicalTypeDef::Double => PhysicalType::Double,
+            PhysicalTypeDef::ByteArray => PhysicalType::ByteArray,
+            PhysicalTypeDef::FixedLenByteArray(a) => PhysicalType::FixedLenByteArray(a),
         }
     }
 }
 
 #[derive(Debug, Serialize)]
-pub enum TimeUnitDef {
+pub enum TimeUnit {
     Miliseconds,
     Microseconds,
     Nanoseconds,
 }
 
-impl From<TimeUnit> for TimeUnitDef {
-    fn from(item: TimeUnit) -> Self {
+impl From<TimeUnitDef> for TimeUnit {
+    fn from(item: TimeUnitDef) -> Self {
         match item {
-            TimeUnit::MILLIS(_) => TimeUnitDef::Miliseconds,
-            TimeUnit::NANOS(_) => TimeUnitDef::Nanoseconds,
-            TimeUnit::MICROS(_) => TimeUnitDef::Microseconds,
+            TimeUnitDef::MILLIS(_) => TimeUnit::Miliseconds,
+            TimeUnitDef::NANOS(_) => TimeUnit::Nanoseconds,
+            TimeUnitDef::MICROS(_) => TimeUnit::Microseconds,
         }
     }
 }
@@ -129,7 +130,7 @@ pub enum LogicalType {
         bits: i8,
     },
     Timestamp {
-        unit: TimeUnitDef,
+        unit: TimeUnit,
         is_adjusted_to_utc: bool,
     },
     Decimal {
@@ -144,7 +145,7 @@ pub enum ParquetType {
         basic_info: BasicTypeInfo,
         logical_type: Option<LogicalType>,
         //converted_type: Option<PrimitiveConvertedType>,
-        physical_type: PhysicalTypeDef,
+        physical_type: PhysicalType,
     },
     GroupType {
         basic_info: BasicTypeInfo,
@@ -182,7 +183,7 @@ impl From<ParquetTypeDef> for ParquetType {
 }
 
 #[derive(Debug, Serialize)]
-pub struct SchemaDescriptorDef {
+pub struct SchemaDescriptor {
     fields: Vec<ParquetType>,
 }
 
@@ -211,8 +212,8 @@ impl From<CompressionDef> for Compression {
     }
 }
 
-impl From<SchemaDescriptor> for SchemaDescriptorDef {
-    fn from(item: SchemaDescriptor) -> Self {
+impl From<SchemaDescriptorDef> for SchemaDescriptor {
+    fn from(item: SchemaDescriptorDef) -> Self {
         Self {
             fields: item.fields().iter().map(|x| x.clone().into()).collect(),
         }
@@ -226,7 +227,7 @@ struct ColumnChunkMetaData {
     compressed_size: i64,
     uncompressed_size: i64,
     byte_range: (u64, u64),
-    physical_type: PhysicalTypeDef,
+    physical_type: PhysicalType,
     compression: Compression,
 }
 
@@ -266,7 +267,7 @@ pub struct FileMetaData {
     version: i32,
     num_rows: i64,
     created_by: Option<String>,
-    schema_descr: SchemaDescriptorDef,
+    schema_descr: SchemaDescriptor,
     row_groups: Vec<RowGroupMetaData>,
 }
 
