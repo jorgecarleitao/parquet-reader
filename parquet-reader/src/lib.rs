@@ -10,7 +10,7 @@ use bridge::*;
 pub fn read_parquet(data: Vec<u8>) -> Result<JsValue, JsValue> {
     let mut reader = Cursor::new(data);
     let version = read::read_metadata(&mut reader).map(|x| {
-        let x: FileMetaDataDef = x.into();
+        let x: FileMetaData = x.into();
         x
     });
     version

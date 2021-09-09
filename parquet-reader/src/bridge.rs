@@ -1,38 +1,44 @@
 use parquet2::{
-    compression::Compression,
-    metadata::{ColumnChunkMetaData, FileMetaData, RowGroupMetaData, SchemaDescriptor},
+    compression::Compression as CompressionDef,
+    metadata::{
+        ColumnChunkMetaData as ColumnChunkMetaDataDef, FileMetaData as FileMetaDataDef,
+        RowGroupMetaData as RowGroupMetaDataDef, SchemaDescriptor,
+    },
     schema::{
-        types::{BasicTypeInfo, LogicalType, ParquetType, PhysicalType, TimeUnit},
-        Repetition,
+        types::{
+            BasicTypeInfo as BasicTypeInfoDef, LogicalType as LogicalTypeDef,
+            ParquetType as ParquetTypeDef, PhysicalType, TimeUnit,
+        },
+        Repetition as RepetitionDef,
     },
 };
 use serde::Serialize;
 
-#[derive(Serialize)]
-pub enum RepetitionDef {
+#[derive(Debug, Serialize)]
+pub enum Repetition {
     Repeated,
     Required,
     Optional,
 }
 
-impl From<Repetition> for RepetitionDef {
-    fn from(item: Repetition) -> Self {
+impl From<RepetitionDef> for Repetition {
+    fn from(item: RepetitionDef) -> Self {
         match item {
-            Repetition::Optional => RepetitionDef::Optional,
-            Repetition::Required => RepetitionDef::Required,
-            Repetition::Repeated => RepetitionDef::Repeated,
+            RepetitionDef::Optional => Repetition::Optional,
+            RepetitionDef::Required => Repetition::Required,
+            RepetitionDef::Repeated => Repetition::Repeated,
         }
     }
 }
 
-#[derive(Serialize)]
-pub struct BasicTypeInfoDef {
+#[derive(Debug, Serialize)]
+pub struct BasicTypeInfo {
     name: String,
-    repetition: RepetitionDef,
+    repetition: Repetition,
 }
 
-impl From<BasicTypeInfo> for BasicTypeInfoDef {
-    fn from(item: BasicTypeInfo) -> Self {
+impl From<BasicTypeInfoDef> for BasicTypeInfo {
+    fn from(item: BasicTypeInfoDef) -> Self {
         Self {
             name: item.name().to_string(),
             repetition: (*item.repetition()).into(),
@@ -40,7 +46,7 @@ impl From<BasicTypeInfo> for BasicTypeInfoDef {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub enum PhysicalTypeDef {
     Boolean,
     Int32,
@@ -67,7 +73,7 @@ impl From<PhysicalType> for PhysicalTypeDef {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub enum TimeUnitDef {
     Miliseconds,
     Microseconds,
@@ -84,37 +90,37 @@ impl From<TimeUnit> for TimeUnitDef {
     }
 }
 
-impl From<LogicalType> for LogicalTypeDef {
-    fn from(item: LogicalType) -> Self {
+impl From<LogicalTypeDef> for LogicalType {
+    fn from(item: LogicalTypeDef) -> Self {
         match item {
-            LogicalType::DATE(_) => LogicalTypeDef::Date,
-            LogicalType::TIME(_) => LogicalTypeDef::Time,
-            LogicalType::STRING(_) => LogicalTypeDef::String,
-            LogicalType::INTEGER(t) => LogicalTypeDef::Integer {
+            LogicalTypeDef::DATE(_) => LogicalType::Date,
+            LogicalTypeDef::TIME(_) => LogicalType::Time,
+            LogicalTypeDef::STRING(_) => LogicalType::String,
+            LogicalTypeDef::INTEGER(t) => LogicalType::Integer {
                 is_signed: t.is_signed,
                 bits: t.bit_width,
             },
-            LogicalType::TIMESTAMP(t) => LogicalTypeDef::Timestamp {
+            LogicalTypeDef::TIMESTAMP(t) => LogicalType::Timestamp {
                 unit: t.unit.into(),
                 is_adjusted_to_utc: t.is_adjusted_to_u_t_c,
             },
-            LogicalType::DECIMAL(t) => LogicalTypeDef::Decimal {
+            LogicalTypeDef::DECIMAL(t) => LogicalType::Decimal {
                 scale: t.scale,
                 precision: t.precision,
             },
-            LogicalType::MAP(_) => todo!(),
-            LogicalType::LIST(_) => todo!(),
-            LogicalType::ENUM(_) => todo!(),
-            LogicalType::UNKNOWN(_) => todo!(),
-            LogicalType::JSON(_) => todo!(),
-            LogicalType::BSON(_) => todo!(),
-            LogicalType::UUID(_) => todo!(),
+            LogicalTypeDef::MAP(_) => todo!(),
+            LogicalTypeDef::LIST(_) => todo!(),
+            LogicalTypeDef::ENUM(_) => todo!(),
+            LogicalTypeDef::UNKNOWN(_) => todo!(),
+            LogicalTypeDef::JSON(_) => todo!(),
+            LogicalTypeDef::BSON(_) => todo!(),
+            LogicalTypeDef::UUID(_) => todo!(),
         }
     }
 }
 
-#[derive(Serialize)]
-pub enum LogicalTypeDef {
+#[derive(Debug, Serialize)]
+pub enum LogicalType {
     Date,
     String,
     Time,
@@ -132,52 +138,56 @@ pub enum LogicalTypeDef {
     },
 }
 
-#[derive(Serialize)]
-pub enum ParquetTypeDef {
+#[derive(Debug, Serialize)]
+pub enum ParquetType {
     PrimitiveType {
-        basic_info: BasicTypeInfoDef,
-        logical_type: Option<LogicalTypeDef>,
+        basic_info: BasicTypeInfo,
+        logical_type: Option<LogicalType>,
         //converted_type: Option<PrimitiveConvertedType>,
         physical_type: PhysicalTypeDef,
     },
     GroupType {
-        basic_info: BasicTypeInfoDef,
-        //logical_type: Option<LogicalType>,
+        basic_info: BasicTypeInfo,
+        logical_type: Option<LogicalType>,
         //converted_type: Option<GroupConvertedType>,
-        fields: Vec<ParquetTypeDef>,
+        fields: Vec<ParquetType>,
     },
 }
 
-impl From<ParquetType> for ParquetTypeDef {
-    fn from(item: ParquetType) -> Self {
+impl From<ParquetTypeDef> for ParquetType {
+    fn from(item: ParquetTypeDef) -> Self {
         match item {
-            ParquetType::PrimitiveType {
+            ParquetTypeDef::PrimitiveType {
                 basic_info,
                 physical_type,
                 logical_type,
                 ..
-            } => ParquetTypeDef::PrimitiveType {
+            } => ParquetType::PrimitiveType {
                 basic_info: basic_info.into(),
                 logical_type: logical_type.map(|x| x.into()),
                 physical_type: physical_type.into(),
             },
-            ParquetType::GroupType {
-                basic_info, fields, ..
-            } => ParquetTypeDef::GroupType {
+            ParquetTypeDef::GroupType {
+                basic_info,
+                logical_type,
+                fields,
+                ..
+            } => ParquetType::GroupType {
                 basic_info: basic_info.into(),
+                logical_type: logical_type.map(|x| x.into()),
                 fields: fields.into_iter().map(|x| x.into()).collect(),
             },
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct SchemaDescriptorDef {
-    fields: Vec<ParquetTypeDef>,
+    fields: Vec<ParquetType>,
 }
 
-#[derive(Serialize)]
-pub enum CompressionDef {
+#[derive(Debug, Serialize)]
+pub enum Compression {
     Uncompressed,
     Snappy,
     Gzip,
@@ -187,16 +197,16 @@ pub enum CompressionDef {
     Zsld,
 }
 
-impl From<Compression> for CompressionDef {
-    fn from(item: Compression) -> Self {
+impl From<CompressionDef> for Compression {
+    fn from(item: CompressionDef) -> Self {
         match item {
-            Compression::Uncompressed => CompressionDef::Uncompressed,
-            Compression::Snappy => CompressionDef::Snappy,
-            Compression::Gzip => CompressionDef::Gzip,
-            Compression::Lzo => CompressionDef::Lzo,
-            Compression::Brotli => CompressionDef::Brotli,
-            Compression::Lz4 => CompressionDef::Lz4,
-            Compression::Zsld => CompressionDef::Zsld,
+            CompressionDef::Uncompressed => Compression::Uncompressed,
+            CompressionDef::Snappy => Compression::Snappy,
+            CompressionDef::Gzip => Compression::Gzip,
+            CompressionDef::Lzo => Compression::Lzo,
+            CompressionDef::Brotli => Compression::Brotli,
+            CompressionDef::Lz4 => Compression::Lz4,
+            CompressionDef::Zsld => Compression::Zsld,
         }
     }
 }
@@ -209,19 +219,19 @@ impl From<SchemaDescriptor> for SchemaDescriptorDef {
     }
 }
 
-#[derive(Serialize)]
-struct ColumnChunkMetaDataDef {
+#[derive(Debug, Serialize)]
+struct ColumnChunkMetaData {
     file_offset: i64,
     num_values: i64,
     compressed_size: i64,
     uncompressed_size: i64,
     byte_range: (u64, u64),
     physical_type: PhysicalTypeDef,
-    compression: CompressionDef,
+    compression: Compression,
 }
 
-impl From<ColumnChunkMetaData> for ColumnChunkMetaDataDef {
-    fn from(item: ColumnChunkMetaData) -> Self {
+impl From<ColumnChunkMetaDataDef> for ColumnChunkMetaData {
+    fn from(item: ColumnChunkMetaDataDef) -> Self {
         Self {
             file_offset: item.file_offset(),
             num_values: item.num_values(),
@@ -234,15 +244,15 @@ impl From<ColumnChunkMetaData> for ColumnChunkMetaDataDef {
     }
 }
 
-#[derive(Serialize)]
-struct RowGroupMetaDataDef {
-    columns: Vec<ColumnChunkMetaDataDef>,
+#[derive(Debug, Serialize)]
+struct RowGroupMetaData {
+    columns: Vec<ColumnChunkMetaData>,
     num_rows: i64,
     total_byte_size: i64,
 }
 
-impl From<RowGroupMetaData> for RowGroupMetaDataDef {
-    fn from(item: RowGroupMetaData) -> Self {
+impl From<RowGroupMetaDataDef> for RowGroupMetaData {
+    fn from(item: RowGroupMetaDataDef) -> Self {
         Self {
             columns: item.columns().iter().map(|x| x.clone().into()).collect(),
             num_rows: item.num_rows(),
@@ -251,17 +261,17 @@ impl From<RowGroupMetaData> for RowGroupMetaDataDef {
     }
 }
 
-#[derive(Serialize)]
-pub struct FileMetaDataDef {
+#[derive(Debug, Serialize)]
+pub struct FileMetaData {
     version: i32,
     num_rows: i64,
     created_by: Option<String>,
     schema_descr: SchemaDescriptorDef,
-    row_groups: Vec<RowGroupMetaDataDef>,
+    row_groups: Vec<RowGroupMetaData>,
 }
 
-impl From<FileMetaData> for FileMetaDataDef {
-    fn from(meta: FileMetaData) -> Self {
+impl From<FileMetaDataDef> for FileMetaData {
+    fn from(meta: FileMetaDataDef) -> Self {
         Self {
             version: meta.version,
             num_rows: meta.num_rows,
